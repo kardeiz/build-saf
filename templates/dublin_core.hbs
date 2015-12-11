@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<dublin_core>
+  {{#each this}}
+    {{#each values}}
+      <dcvalue 
+        element="{{ ../../element }}"
+        qualifier="{{ ../../qualifier }}">{{ this }}</dcvalue>
+    {{/each}}
+  {{/each}}
+</dublin_core>

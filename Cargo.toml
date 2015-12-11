@@ -1,0 +1,13 @@
+[package]
+authors = ["kardeiz <kardeiz@gmail.com>"]
+name = "build-saf"
+version = "0.1.0"
+
+[dependencies]
+csv = "0.14.3"
+encoding = "0.2.32"
+getopts = "0.2.14"
+glob = "0.2.10"
+handlebars = "0.12.0"
+rustc-serialize = "0.3.16"
+zip = "0.1.15"
