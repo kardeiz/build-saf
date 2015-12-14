@@ -182,7 +182,7 @@ fn main() {
     for file_name_ext in file_names.iter() {
       let mut ext: Vec<&str> = file_name_ext.split("__").collect();
 
-      ext.append(&mut file_name_opts);
+      ext.append(&mut file_name_opts.clone());
 
       let file_name = ext.get(0).unwrap();
       let file_all  = ext.join("\t");
