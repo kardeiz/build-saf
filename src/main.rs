@@ -5,6 +5,7 @@ extern crate handlebars;
 extern crate rustc_serialize;
 extern crate glob;
 extern crate zip;
+#[macro_use] extern crate maplit;
 
 use getopts::Options;
 
@@ -48,11 +49,11 @@ impl DcEntry {
 
 impl ToJson for DcEntry {
   fn to_json(&self) -> Json {
-    let mut m: BTreeMap<String, Json> = BTreeMap::new();
-    m.insert("element".to_string(), self.element.to_json());
-    m.insert("qualifier".to_string(), self.qualifier.to_json());
-    m.insert("values".to_string(), self.real_values().to_json());
-    m.to_json()
+    (btreemap!{
+      "element".into() => self.element.to_json(),
+      "qualifier".into() => self.qualifier.to_json(),
+      "values".into() => self.real_values().to_json()
+    }).to_json()
   }
 }
 
@@ -69,14 +70,14 @@ pub mod utils {
     enc.decode(&content, encoding::DecoderTrap::Replace).map_err(|e| e.into_owned() )
   }
 
-  pub fn get_filename_tup<'a>(map: &'a HashMap<String, &'a String>) 
+  pub fn get_filename_tuple<'a>(map: &'a HashMap<String, &'a String>) 
     -> (&'a String, &'a &'a String) {
-    let col = map.iter().filter(|&(k, v)| k.starts_with("filename")).next();
-    let alt = (
+    let alts = (
+      || map.iter().filter(|&(k, v)| k.starts_with("filename")).next(),
       || map.iter().filter(|&(k, v)| k.starts_with("file name")).next(),
       || map.iter().filter(|&(k, v)| k.starts_with("bitstream")).next()
     );
-    col.or_else(alt.0).or_else(alt.1).expect("No filename column")
+    alts.0().or_else(alts.1).or_else(alts.2).expect("No filename column")
   }
 
 }
@@ -89,13 +90,8 @@ fn main() {
   handlebars.register_template_string("dc", 
     include_str!("../templates/dublin_core.hbs").to_string());
 
-  // let current_dir = env::current_exe().ok()
-  //   .and_then(|exe| exe.parent().map(|p| p.to_path_buf() ))
-  //   .expect("Issue with path to exe");
 
   let current_dir = env::current_dir().unwrap();
-
-  println!("{:?}", &current_dir);
 
   let args: Vec<String> = env::args().collect();
   
@@ -171,15 +167,15 @@ fn main() {
     let mut contents = 
       fs::File::create(&folder_path.join("contents")).unwrap();
 
-    let (file_name_key, file_name_vals) = utils::get_filename_tup(&zipped);
+    let (file_name_key, file_name_vals) = utils::get_filename_tuple(&zipped);
 
     let mut file_name_opts: Vec<&str> = file_name_key.split("__").collect();
 
     file_name_opts.remove(0);
 
-    let file_names: Vec<&str> = file_name_vals.split("||").collect();
+    let file_name_exts: Vec<&str> = file_name_vals.split("||").collect();
 
-    for file_name_ext in file_names.iter() {
+    for file_name_ext in file_name_exts.iter() {
       let mut ext: Vec<&str> = file_name_ext.split("__").collect();
 
       ext.append(&mut file_name_opts.clone());
@@ -192,6 +188,7 @@ fn main() {
       
       contents.write_all(&file_all.as_bytes()).unwrap();
       contents.write_all("\r\n".as_bytes()).unwrap();
+
     }
 
     let result = handlebars.render("dc", &entries);
@@ -225,17 +222,7 @@ fn main() {
           }
         }
       }
-
     }
-
   }
-
-
-  
-
-  
-
-
-
 
 }
